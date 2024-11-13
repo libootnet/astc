@@ -1,3 +1,3 @@
 # ASTC
 
-## AST Example for Rust Language
+## AST Example in Rust Language
