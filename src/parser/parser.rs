@@ -1,5 +1,4 @@
-use crate::lexer::token::Lexer;
-use crate::lexer::token::Token;
+use crate::lexer::token::{Lexer, Token};
 
 use crate::parser::statement::{Expression, Operator, Statement};
 
@@ -22,7 +21,7 @@ impl<'a> Parser<'a> {
     pub fn parse(&mut self) -> Vec<Statement> {
         let mut statements = Vec::new();
         while let Some(ref token) = self.curr.clone() {
-            println!("{:?}",token);
+            println!("{:?}", token);
             match token {
                 Token::Keyword(ref k) if k == "if" => {
                     if let Some(stmt) = self.parse_if_statement() {

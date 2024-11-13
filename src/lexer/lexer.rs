@@ -1,5 +1,4 @@
-use crate::lexer::token::Token;
-use crate::lexer::token::Lexer;
+use crate::lexer::token::{Lexer, Token};
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
