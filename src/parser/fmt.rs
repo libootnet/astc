@@ -1,32 +1,15 @@
 use std::fmt;
 
-#[derive(Debug)]
-pub enum Statement {
-    VarDeclaration { name: String, var_type: Option<String>, value: Expression },
-    FunctionCall { name: String, args: Vec<Expression> },
-}
-
-#[derive(Debug)]
-pub enum Expression {
-    Identifier(String),
-    Number(f64),
-    StringLiteral(String),
-    BinaryOp(Box<Expression>, Operator, Box<Expression>),
-    FunctionCall { name: String, args: Vec<Expression> },
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Operator {
-    Add,
-    Sub,
-    Mul,
-    Div,
-}
+use crate::parser::statement::{Expression, Operator, Statement};
 
 impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Statement::VarDeclaration { name, var_type, value } => {
+            Statement::VarDeclaration {
+                name,
+                var_type,
+                value,
+            } => {
                 let var_type_str = match var_type {
                     Some(t) => t.clone(),
                     None => "unknown".to_string(),
@@ -34,8 +17,33 @@ impl fmt::Display for Statement {
                 write!(f, "Var: {}: {} = {}", name, var_type_str, value)
             }
             Statement::FunctionCall { name, args } => {
-                let args_str = args.iter().map(|arg| format!("{}", arg)).collect::<Vec<String>>().join(", ");
+                let args_str = args
+                    .iter()
+                    .map(|arg| format!("{}", arg))
+                    .collect::<Vec<String>>()
+                    .join(", ");
                 write!(f, "FunctionCall: {}({})", name, args_str)
+            }
+            Statement::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                write!(f, "If: ({}) {{\n", condition)?;
+                for stmt in then_branch {
+                    writeln!(f, "    {}", stmt)?;
+                }
+                write!(f, "}}")?;
+
+                if let Some(else_branch) = else_branch {
+                    write!(f, " else {{\n")?;
+                    for stmt in else_branch {
+                        writeln!(f, "    {}", stmt)?;
+                    }
+                    write!(f, "}}")?;
+                }
+
+                Ok(())
             }
         }
     }
@@ -57,7 +65,11 @@ impl fmt::Display for Expression {
                 write!(f, "({} {} {})", left, op_str, right)
             }
             Expression::FunctionCall { name, args } => {
-                let args_str = args.iter().map(|arg| format!("{}", arg)).collect::<Vec<String>>().join(", ");
+                let args_str = args
+                    .iter()
+                    .map(|arg| format!("{}", arg))
+                    .collect::<Vec<String>>()
+                    .join(", ");
                 write!(f, "FunctionCall: {}({})", name, args_str)
             }
         }

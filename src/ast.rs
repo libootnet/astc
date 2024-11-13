@@ -1,4 +1,4 @@
-use crate::statement::Statement;
+use crate::parser::statement::Statement;
 
 pub fn print_ast(statements: Vec<Statement>) {
     for stmt in statements {
