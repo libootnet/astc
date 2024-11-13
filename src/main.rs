@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::{self, Read};
 
 fn main() {
-    let path = "examples/if.tsp";
+    let path = "examples/if.astc";
     
     let code = match read_file(path) {
         Ok(contents) => contents,
@@ -28,11 +28,11 @@ fn read_file(path: &str) -> Result<String, io::Error> {
         Ok(file) => file,
         Err(error) => match error.kind() {
             io::ErrorKind::NotFound => {
-                eprintln!("Error: File not found at path '{}'", path);
+                eprintln!("Error: File not found at path");
                 return Err(error);
             }
             io::ErrorKind::PermissionDenied => {
-                eprintln!("Error: Permission denied for file '{}'", path);
+                eprintln!("Error: Permission denied for file");
                 return Err(error);
             }
             other_error => {
