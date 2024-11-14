@@ -1,6 +1,8 @@
 use crate::lexer::token::{Lexer, Token};
 
-use crate::parser::statement::{Expression, Operator, Statement};
+use crate::parser::statement::{
+    ComparisonOperator, Expression, LogicalOperator, Operator, Statement,
+};
 
 pub struct Parser<'a> {
     lexer: Lexer<'a>,
@@ -203,6 +205,101 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_expression(&mut self) -> Option<Expression> {
+        self.parse_logical_expression()
+    }
+
+    pub fn parse_logical_expression(&mut self) -> Option<Expression> {
+        let mut left = self.parse_comparison_expression()?;
+
+        while let Some(Token::Symbol(op)) = &self.curr {
+            match op {
+                '&' => {
+                    self.advance();
+                    if let Some(Token::Symbol('&')) = self.curr {
+                        self.advance();
+                        let right = self.parse_comparison_expression()?;
+                        left = Expression::LogicalOp(
+                            Box::new(left),
+                            LogicalOperator::And,
+                            Box::new(right),
+                        );
+                    } else {
+                        return None;
+                    }
+                }
+                '|' => {
+                    self.advance();
+                    if let Some(Token::Symbol('|')) = self.curr {
+                        self.advance();
+                        let right = self.parse_comparison_expression()?;
+                        left = Expression::LogicalOp(
+                            Box::new(left),
+                            LogicalOperator::Or,
+                            Box::new(right),
+                        );
+                    } else {
+                        return None;
+                    }
+                }
+                _ => break,
+            }
+        }
+
+        Some(left)
+    }
+
+    pub fn parse_comparison_expression(&mut self) -> Option<Expression> {
+        let mut left = self.parse_additive_expression()?;
+
+        while let Some(Token::Symbol(op)) = &self.curr {
+            let comparison_operator = match op {
+                '=' => {
+                    self.advance();
+                    if let Some(Token::Symbol('=')) = self.curr {
+                        self.advance();
+                        ComparisonOperator::Equal
+                    } else {
+                        return None;
+                    }
+                }
+                '!' => {
+                    self.advance();
+                    if let Some(Token::Symbol('=')) = self.curr {
+                        self.advance();
+                        ComparisonOperator::NotEqual
+                    } else {
+                        return None;
+                    }
+                }
+                '<' => {
+                    self.advance();
+                    if let Some(Token::Symbol('=')) = self.curr {
+                        self.advance();
+                        ComparisonOperator::LessThanOrEqual
+                    } else {
+                        ComparisonOperator::LessThan
+                    }
+                }
+                '>' => {
+                    self.advance();
+                    if let Some(Token::Symbol('=')) = self.curr {
+                        self.advance();
+                        ComparisonOperator::GreaterThanOrEqual
+                    } else {
+                        ComparisonOperator::GreaterThan
+                    }
+                }
+                _ => break,
+            };
+
+            let right = self.parse_additive_expression()?;
+            left = Expression::ComparisonOp(Box::new(left), comparison_operator, Box::new(right));
+        }
+
+        Some(left)
+    }
+
+    pub fn parse_additive_expression(&mut self) -> Option<Expression> {
         let mut left = self.parse_term()?;
 
         while let Some(Token::Symbol(op)) = &self.curr {
@@ -271,7 +368,7 @@ impl<'a> Parser<'a> {
                         None
                     }
                 } else {
-                    return Some(Expression::Identifier(name));
+                    Some(Expression::Identifier(name))
                 }
             }
             Some(Token::Number(num)) => {

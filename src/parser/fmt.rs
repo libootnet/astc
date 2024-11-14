@@ -1,6 +1,8 @@
 use std::fmt;
 
-use crate::parser::statement::{Expression, Operator, Statement};
+use crate::parser::statement::{
+    ComparisonOperator, Expression, LogicalOperator, Operator, Statement,
+};
 
 impl fmt::Display for Statement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -70,6 +72,7 @@ impl fmt::Display for Expression {
             Expression::Identifier(name) => write!(f, "Ident: {}", name),
             Expression::Number(num) => write!(f, "{}", num),
             Expression::StringLiteral(s) => write!(f, "StringLiteral: {}", s),
+            
             Expression::BinaryOp(left, op, right) => {
                 let op_str = match op {
                     Operator::Add => "+",
@@ -79,6 +82,27 @@ impl fmt::Display for Expression {
                 };
                 write!(f, "({} {} {})", left, op_str, right)
             }
+
+            Expression::ComparisonOp(left, op, right) => {
+                let op_str = match op {
+                    ComparisonOperator::Equal => "==",
+                    ComparisonOperator::NotEqual => "!=",
+                    ComparisonOperator::LessThan => "<",
+                    ComparisonOperator::GreaterThan => ">",
+                    ComparisonOperator::LessThanOrEqual => "<=",
+                    ComparisonOperator::GreaterThanOrEqual => ">=",
+                };
+                write!(f, "({} {} {})", left, op_str, right)
+            }
+
+            Expression::LogicalOp(left, op, right) => {
+                let op_str = match op {
+                    LogicalOperator::And => "&&",
+                    LogicalOperator::Or => "||",
+                };
+                write!(f, "({} {} {})", left, op_str, right)
+            }
+
             Expression::FunctionCall { name, args } => {
                 let args_str = args
                     .iter()
@@ -90,6 +114,7 @@ impl fmt::Display for Expression {
         }
     }
 }
+
 
 impl fmt::Display for Operator {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
