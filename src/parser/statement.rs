@@ -23,8 +23,8 @@ pub enum Expression {
     Number(f64),
     StringLiteral(String),
     BinaryOp(Box<Expression>, Operator, Box<Expression>),
-    LogicalOp(Box<Expression>, LogicalOperator, Box<Expression>), // 論理演算子
-    ComparisonOp(Box<Expression>, ComparisonOperator, Box<Expression>), // 比較演算子
+    LogicalOp(Box<Expression>, LogicalOperator, Box<Expression>), // logical operator
+    ComparisonOp(Box<Expression>, ComparisonOperator, Box<Expression>), // Relative operators
     FunctionCall { name: String, args: Vec<Expression> },
 }
 
