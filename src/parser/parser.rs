@@ -23,11 +23,17 @@ impl<'a> Parser<'a> {
         while let Some(ref token) = self.curr.clone() {
             println!("{:?}", token);
             match token {
+                // block end
+                Token::Symbol(ref k) if *k == '}' => {
+                    break;
+                }
+
                 Token::Keyword(ref k) if k == "if" => {
                     if let Some(stmt) = self.parse_if_statement() {
                         statements.push(stmt);
                     }
                 }
+
                 Token::Keyword(ref k) if k == "let" || k == "const" => {
                     self.advance();
                     if let Some(stmt) = self.parse_var_decl() {
@@ -41,6 +47,7 @@ impl<'a> Parser<'a> {
                         statements.push(stmt);
                     }
                 }
+
                 _ => self.advance(),
             }
         }
