@@ -18,10 +18,25 @@ impl<'a> Parser<'a> {
         self.curr = self.lexer.next_token();
     }
 
+    fn expect(&mut self, expected: Token) -> Option<()> {
+        if let Some(token) = &self.curr {
+            if *token == expected {
+                self.advance();
+                Some(())
+            } else {
+                eprintln!("Error: Expected {:?}", expected);
+                None
+            }
+        } else {
+            eprintln!("Error: Unexpected end of input.");
+            None
+        }
+    }
+
     pub fn parse(&mut self) -> Vec<Statement> {
         let mut statements = Vec::new();
         while let Some(ref token) = self.curr.clone() {
-            println!("{:?}", token);
+            println!("debug {:?}", token);
             match token {
                 // block end
                 Token::Symbol(ref k) if *k == '}' => {
@@ -57,40 +72,52 @@ impl<'a> Parser<'a> {
     fn parse_if_statement(&mut self) -> Option<Statement> {
         self.advance();
 
+        /*
+        if ( condition ) {
+           block;
+        }
+        */
+
+        if self.expect(Token::Symbol('(')).is_none() {
+            return None;
+        }
+
         let condition = self.parse_expression()?;
 
-        if let Some(Token::Symbol('{')) = self.curr {
-            self.advance();
-        } else {
-            eprintln!("Error: Expected.");
+        if self.expect(Token::Symbol(')')).is_none() {
+            return None;
+        }
+
+        if self.expect(Token::Symbol('{')).is_none() {
             return None;
         }
 
         let mut then_branch = Vec::new();
         while let Some(token) = &self.curr {
-            println!("{:?}", token);
             if let Token::Symbol('}') = token {
                 break;
             }
             then_branch.extend(self.parse());
         }
 
-        println!("{:?}", self.curr);
-
-        if let Some(Token::Symbol('}')) = self.curr {
-            self.advance();
-        } else {
-            eprintln!("Error: Expected.");
+        if self.expect(Token::Symbol('}')).is_none() {
             return None;
         }
 
         let else_branch = if let Some(Token::Keyword(ref k)) = self.curr {
             if k == "else" {
                 self.advance();
-                if let Some(Token::Symbol('{')) = self.curr {
-                    self.advance();
-                } else {
-                    eprintln!("Error: Expected.");
+                if let Some(Token::Keyword(ref k)) = self.curr {
+                    if k == "if" {
+                        return Some(Statement::If {
+                            condition,
+                            then_branch,
+                            else_branch: Some(Box::new(self.parse_if_statement()?)),
+                        });
+                    }
+                }
+
+                if self.expect(Token::Symbol('{')).is_none() {
                     return None;
                 }
 
@@ -102,14 +129,11 @@ impl<'a> Parser<'a> {
                     else_branch.extend(self.parse());
                 }
 
-                if let Some(Token::Symbol('}')) = self.curr {
-                    self.advance();
-                } else {
-                    eprintln!("Error: Expected.");
+                if self.expect(Token::Symbol('}')).is_none() {
                     return None;
                 }
 
-                Some(else_branch)
+                Some(Box::new(Statement::Block(else_branch)))
             } else {
                 None
             }

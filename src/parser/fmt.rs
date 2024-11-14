@@ -36,14 +36,29 @@ impl fmt::Display for Statement {
                 write!(f, "}}")?;
 
                 if let Some(else_branch) = else_branch {
-                    write!(f, " else {{\n")?;
-                    for stmt in else_branch {
-                        writeln!(f, "    {}", stmt)?;
+                    match **else_branch {
+                        Statement::If { .. } => {
+                            write!(f, " else {}", else_branch)?;
+                        }
+                        Statement::Block(ref stmts) => {
+                            write!(f, " else {{\n")?;
+                            for stmt in stmts {
+                                writeln!(f, "    {}", stmt)?;
+                            }
+                            write!(f, "}}")?;
+                        }
+                        _ => {}
                     }
-                    write!(f, "}}")?;
                 }
 
                 Ok(())
+            }
+            Statement::Block(stmts) => {
+                write!(f, "{{\n")?;
+                for stmt in stmts {
+                    writeln!(f, "    {}", stmt)?;
+                }
+                write!(f, "}}")
             }
         }
     }

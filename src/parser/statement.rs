@@ -12,8 +12,9 @@ pub enum Statement {
     If {
         condition: Expression,
         then_branch: Vec<Statement>,
-        else_branch: Option<Vec<Statement>>,
+        else_branch: Option<Box<Statement>>,
     },
+    Block(Vec<Statement>),
 }
 
 #[derive(Debug)]
